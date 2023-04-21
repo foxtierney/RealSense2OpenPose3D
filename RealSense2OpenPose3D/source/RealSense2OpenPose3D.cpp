@@ -323,6 +323,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
 
         unsigned int i, j;
         int x, y; //Iterators and temp keypoint pixel information
+        double confidence; //Temp confidence value
         double tempPose3d[25 * 4], tempFace3d[69 * 4]; //3D pose and face arrays to hold temp values to insert into each file
         rs2::vertex tempVertex;
         bool insertFace = true; //Assume that there are face keypoints
@@ -335,6 +336,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
                 //Get the x and y coordinates of each keypoint
                 x = f2i(jsn["people"][i]["pose_keypoints_2d"][3 * j]);
                 y = f2i(jsn["people"][i]["pose_keypoints_2d"][3 * j + 1]);
+                confidence = jsn["people"][i]["pose_keypoints_2d"][3 * j + 2];
 
                 if (x > 0 && y > 0 && x < 1920 && y < 1080) // if keypoint exists and within possible ranges
                 {
@@ -343,7 +345,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
                     tempPose3d[4 * j] = tempVertex.x;
                     tempPose3d[4 * j + 1] = tempVertex.y;
                     tempPose3d[4 * j + 2] = tempVertex.z;
-                    tempPose3d[4 * j + 3] = 1; // "Confidence" = 1
+                    tempPose3d[4 * j + 3] = confidence;
                 }
                 else //If there was no keypoint
                 {
@@ -362,6 +364,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
                     //Get the x and y coordinates of each keypoint
                     x = f2i(jsn["people"][i]["face_keypoints_2d"][3 * j]);
                     y = f2i(jsn["people"][i]["face_keypoints_2d"][3 * j + 1]);
+                    confidence = jsn["people"][i]["face_keypoints_2d"][3 * j + 2];
 
                     if (x > 0 && y > 0 && x < 1920 && y < 1080) // if keypoint exists
                     {
@@ -370,7 +373,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
                         tempFace3d[4 * j] = tempVertex.x;
                         tempFace3d[4 * j + 1] = tempVertex.y;
                         tempFace3d[4 * j + 2] = tempVertex.z;
-                        tempFace3d[4 * j + 3] = 1; // "Confidence" = 1
+                        tempFace3d[4 * j + 3] = confidence;
                     }
                     else //If there was no keypoint
                     {
