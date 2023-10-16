@@ -49,10 +49,10 @@ void press2Close(); //Simple wait for user input to close the program
 
 int depthWidth = 1280; //Sensor resolutions
 int depthHeight = 720;
-int colorWidth = 1280;
-int colorHeight = 720;
+int colorWidth = 1920;
+int colorHeight = 1080;
 
-const rs2::vertex* depthVertices = new rs2::vertex[colorWidth * colorHeight]; //Allocate memory for an array of vertecies, one vertex for every pixel
+const rs2::vertex* depthVertices = nullptr; //Array of vertecies, one vertex for every pixel
 
 //Initial frame and camera information
 rs2_intrinsics colorIntrinsics;
@@ -174,18 +174,27 @@ int main(int argc, char* argv[])
 //  If there are any problems, the default OpenPose output directory is kept.
 bool checkCmdLine(int argNum, char** argStrings)
 {
-    char expected[] = "Expected input: .\\RealSense2OpenPose3D.exe \"path\\to\\openpose\\output\\directory\"\n";
+    char expected[] = "Expected input: .\\RealSense2OpenPose3D.exe \"path\\to\\openpose\\output\\directory\" \"<width>x<height>\"\n";
     char defaultPath[] = "Using the default OpenPose output directory path.\n";
     char outWillBe[] = "The OpenPose output directory will be \"";
 
     if (argNum > 1) //There are arguments
     {
-        if (argNum > 2) // More than one argument
+        if (argNum > 3) // More than two arguments
         {
             std::cout << "Too many arguments.\n" << expected << defaultPath << outWillBe << OpenPoseOutPath << "\"\n";
         }//If more than one argument
 
         OpenPoseOutPath.assign(argStrings[1]);
+
+        //Parse color dimensions
+        char* dimension;
+        dimension = std::strtok(argString[2], "x");
+        colorWidth = std::stoi(dimension); //Width
+        dimension = std::strtok(NULL, "x");
+        colorHeight = std::stoi(dimension); //Height
+
+        depthVertices = new rs2::vertex[colorWidth * colorHeight]; //Allocate memory for the depth vector 
     }
     else //There were no arguements
     {

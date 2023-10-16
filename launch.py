@@ -18,7 +18,7 @@ import keyboard #For keypress to stop program
 openPosePath = "C:\\Program Files\\OpenPose\\openpose"
 openPoseEXE = ".\\build\\x64\\Release\\OpenPoseDemo.exe"
 openPoseOutputPath = "C:\\Users\\user\\Desktop\\AndroidControl\\sensor\\faceDetection\\openPoseOutput"
-openPoseArgs = ["start", "/WAIT", openPoseEXE, "-camera", "1", "-face", "-camera_resolution", "1920x1080", "-write_json", openPoseOutputPath, "-output_resolution", "960x540", "-fps_max", "12"] #Add , "-net_resolution", "320x176", "-face_net_resolution", "320x320" to the end of this list if more speed is needed for fewer people
+openPoseArgs = ["start", "/WAIT", openPoseEXE, "-camera", "1", "-camera_resolution", "1920x1080", "-write_json", openPoseOutputPath, "-output_resolution", "1280x720", "-fps_max", "12"] #Add , "-net_resolution", "320x176", "-face_net_resolution", "320x320" to the end of this list if more speed is needed for fewer people
 RealSense2OpenPoseEXE = "C:\\Users\\user\\Desktop\\AndroidControl\\sensor\\faceDetection\\RealSense2OpenPose3D\\Release\\RealSense2OpenPose3D.exe"
 PointViewer = "C:\\Users\\user\\Desktop\\AndroidControl\\sensor\\faceDetection\\PointViewer.py"
 #Output
@@ -29,6 +29,8 @@ startViewer = False #Will pointViewer.py be started or not
 viewerExtra = "" #Extra cli arguments to modify the viewer's behavior
 #Quit Program Key
 quitKey = "q"
+#Camera Resolution
+colorResoultion = "1920x1080"
 
 #Define Parse Command
 #Parses the command line arguments to get the number of held frames and whether to start the viewer or not
@@ -37,13 +39,15 @@ def parseCmd(cmds):
     global numHeldFrames
     global startViewer
     global viewerExtra
+	global colorResoultion
+	global openPoseArgs
     
-    expected = "Expected: \"...\\launch.py \n\t[frames=(Number of Frames)]\n\t[view=(True/False)]\n\t[quit=(key name)]\n\t[d=(depth limit in meters)]\n\t[lr=(left limit in meters),(right limit in meters)]\n\t[ud=(up above limit in meters),(down belown limit in meters)]\""
+    expected = "Expected: \"...\\launch.py \n\t[frames=(Number of Frames)]\n\t[view=(True/False)]\n\t[quit=(key name)]\n\t[d=(depth limit in meters)]\n\t[lr=(left limit in meters),(right limit in meters)]\n\t[ud=(up above limit in meters),(down belown limit in meters)]\n\t[color-res=<width>x<height>]\n\t[face=<true/false>]\n\t[hand=<true/false>]\""
     
     lenCmds = len(cmds)
     
     if(lenCmds > 1): #There was an argument passed
-        if(lenCmds > 7): #Too many arguments
+        if(lenCmds > 10): #Too many arguments
             print("Too many arguments.")
             print(expected)
             exit()
@@ -64,6 +68,15 @@ def parseCmd(cmds):
                         quitKey = value
                     elif(field == "d" or field == "lr" or field == "ud"): #Point viwer extra argument case
                         viewerExtra += " " + cmds[cmdNum] #Add this command to the viewerExtra string
+					elif(field == "color-res"): #Change the color camera resolution
+						colorResoultion = value
+						openPoseArgs[6] = value
+					elif(field == "face"): #Generate face keypoints
+						if(value.lower() in ["true", "t", "yes", "y", "1"]): #If "True"
+							openPoseArgs.append("--face")
+					elif(field == "hand"): #Generate hand keypoints
+						if(value.lower() in ["true", "t", "yes", "y", "1"]): #If "True"
+							openPoseArgs.append("--hand")
                     else:
                         Print("\"" + field + "\" is not a valid argument name")
                 except:
@@ -81,7 +94,7 @@ if __name__ == '__main__':
         
     #Start RealSense to OpenPose 3D
     print("Starting Realsense to OpenPose 3D in a new window...")
-    realsense2OpenPoseProc = subprocess.Popen([RealSense2OpenPoseEXE, openPoseOutputPath], creationflags=subprocess.CREATE_NEW_CONSOLE)
+    realsense2OpenPoseProc = subprocess.Popen([RealSense2OpenPoseEXE, openPoseOutputPath, colorResoultion], creationflags=subprocess.CREATE_NEW_CONSOLE)
     print("Started Realsense to OpenPose 3D")
 
     #Wait a little bit for the color camera to be ready for use by OpenPose
