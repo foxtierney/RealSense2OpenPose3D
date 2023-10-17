@@ -189,14 +189,14 @@ bool checkCmdLine(int argNum, char** argStrings)
 
         //Parse color dimensions
         char* dimension;
-        dimension = std::strtok(argString[2], "x");
+        dimension = std::strtok(argStrings[2], "x");
         colorWidth = std::stoi(dimension); //Width
         dimension = std::strtok(NULL, "x");
         colorHeight = std::stoi(dimension); //Height
 
         depthVertices = new rs2::vertex[colorWidth * colorHeight]; //Allocate memory for the depth vector 
     }
-    else //There were no arguements
+    else //There were no arguments
     {
         std::cout << "No arguments detected\n";
     }
@@ -422,7 +422,8 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
 					}
 				}//For right hand 21 keypoints
 			}
-			catch{
+			catch(...)
+			{
 				insertHand = false;
 			}
 
