@@ -348,7 +348,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
                 y = f2i(jsn["people"][i]["pose_keypoints_2d"][3 * j + 1]);
                 confidence = jsn["people"][i]["pose_keypoints_2d"][3 * j + 2];
 
-                if (x > 0 && y > 0 && x < 1280 && y < 720) // if keypoint exists and within possible ranges
+                if (x > 0 && y > 0 && x < colorWidth && y < colorHeight) // if keypoint exists and within possible ranges
                 {
                     //Set the x, y, and depth
                     tempVertex = depth[y * colorWidth + x];
@@ -376,7 +376,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
 					y = f2i(jsn["people"][i]["hand_left_keypoints_2d"][3 * j + 1]);
 					confidence = jsn["people"][i]["hand_left_keypoints_2d"][3 * j + 2];
 
-					if (x > 0 && y > 0 && x < 1280 && y < 720) // if keypoint exists and within possible ranges
+					if (x > 0 && y > 0 && x < colorWidth && y < colorHeight) // if keypoint exists and within possible ranges
 					{
 						//Set the x, y, and depth
 						tempVertex = depth[y * colorWidth + x];
@@ -403,7 +403,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
 					y = f2i(jsn["people"][i]["hand_right_keypoints_2d"][3 * j + 1]);
 					confidence = jsn["people"][i]["hand_right_keypoints_2d"][3 * j + 2];
 
-					if (x > 0 && y > 0 && x < 1280 && y < 720) // if keypoint exists and within possible ranges
+					if (x > 0 && y > 0 && x < colorWidth && y < colorHeight) // if keypoint exists and within possible ranges
 					{
 						//Set the x, y, and depth
 						tempVertex = depth[y * colorWidth + x];
@@ -437,7 +437,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
                     y = f2i(jsn["people"][i]["face_keypoints_2d"][3 * j + 1]);
                     confidence = jsn["people"][i]["face_keypoints_2d"][3 * j + 2];
 
-                    if (x > 0 && y > 0 && x < 1280 && y < 720) // if keypoint exists
+                    if (x > 0 && y > 0 && x < colorWidth && y < colorHeight) // if keypoint exists
                     {
                         //Set the x, y, and depth
                         tempVertex = depth[y * colorWidth + x];
@@ -454,7 +454,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
                         tempFace3d[4 * j + 2] = 0;
                         tempFace3d[4 * j + 3] = 0; // "Confidence" = 0
                     }
-                }//For all 96 Face keypoints
+                }//For all 69 Face keypoints
             }
             catch(...)
             {
