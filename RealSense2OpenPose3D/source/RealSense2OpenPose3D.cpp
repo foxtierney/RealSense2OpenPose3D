@@ -52,7 +52,7 @@ int depthHeight = 720;
 int colorWidth = 1920;
 int colorHeight = 1080;
 
-const rs2::vertex* depthVertices = new rs2::vertex[colorWidth * colorHeight]; //Allocate memory for an array of vertecies, one vertex for every pixel
+const rs2::vertex* depthVertices = nullptr; //Array of vertecies, one vertex for every pixel
 
 //Initial frame and camera information
 rs2_intrinsics colorIntrinsics;
@@ -174,20 +174,29 @@ int main(int argc, char* argv[])
 //  If there are any problems, the default OpenPose output directory is kept.
 bool checkCmdLine(int argNum, char** argStrings)
 {
-    char expected[] = "Expected input: .\\RealSense2OpenPose3D.exe \"path\\to\\openpose\\output\\directory\"\n";
+    char expected[] = "Expected input: .\\RealSense2OpenPose3D.exe \"path\\to\\openpose\\output\\directory\" \"<width>x<height>\"\n";
     char defaultPath[] = "Using the default OpenPose output directory path.\n";
     char outWillBe[] = "The OpenPose output directory will be \"";
 
     if (argNum > 1) //There are arguments
     {
-        if (argNum > 2) // More than one argument
+        if (argNum > 3) // More than two arguments
         {
             std::cout << "Too many arguments.\n" << expected << defaultPath << outWillBe << OpenPoseOutPath << "\"\n";
         }//If more than one argument
 
         OpenPoseOutPath.assign(argStrings[1]);
+
+        //Parse color dimensions
+        char* dimension;
+        dimension = std::strtok(argStrings[2], "x");
+        colorWidth = std::stoi(dimension); //Width
+        dimension = std::strtok(NULL, "x");
+        colorHeight = std::stoi(dimension); //Height
+
+        depthVertices = new rs2::vertex[colorWidth * colorHeight]; //Allocate memory for the depth vector 
     }
-    else //There were no arguements
+    else //There were no arguments
     {
         std::cout << "No arguments detected\n";
     }
@@ -242,8 +251,8 @@ void getBaselineFrameAndCameraValues()
     rs2::pipeline pipe; // Create a pipeline
 
     rs2::config cfg; //set up the configuration of the camera
-    cfg.enable_stream(RS2_STREAM_DEPTH, 1280, 720, RS2_FORMAT_Z16, 30); //Full resolution and max FPS to speed up process
-    cfg.enable_stream(RS2_STREAM_COLOR, 1920, 1080, RS2_FORMAT_BGR8, 30); //Note that the color stream is ENABLED, matched FPS with depth
+    cfg.enable_stream(RS2_STREAM_DEPTH, depthWidth, depthHeight, RS2_FORMAT_Z16, 30); //Full resolution and max FPS to speed up process
+    cfg.enable_stream(RS2_STREAM_COLOR, colorWidth, colorHeight, RS2_FORMAT_BGR8, 30); //Note that the color stream is ENABLED, matched FPS with depth
 
     pipe.start(cfg);
 
@@ -324,9 +333,10 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
         unsigned int i, j;
         int x, y; //Iterators and temp keypoint pixel information
         double confidence; //Temp confidence value
-        double tempPose3d[25 * 4], tempFace3d[69 * 4]; //3D pose and face arrays to hold temp values to insert into each file
+        double tempPose3d[25 * 4], tempFace3d[69 * 4], tempLeftHand3d[21 * 4], tempRightHand3d[21 * 4]; //3D pose and face arrays to hold temp values to insert into each file
         rs2::vertex tempVertex;
         bool insertFace = true; //Assume that there are face keypoints
+		bool insertHand = true; //...and hand keypoints
 
         for (i = 0; i < jsn["people"].size(); i++) //For all people
         {
@@ -338,7 +348,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
                 y = f2i(jsn["people"][i]["pose_keypoints_2d"][3 * j + 1]);
                 confidence = jsn["people"][i]["pose_keypoints_2d"][3 * j + 2];
 
-                if (x > 0 && y > 0 && x < 1920 && y < 1080) // if keypoint exists and within possible ranges
+                if (x > 0 && y > 0 && x < colorWidth && y < colorHeight) // if keypoint exists and within possible ranges
                 {
                     //Set the x, y, and depth
                     tempVertex = depth[y * colorWidth + x];
@@ -356,6 +366,67 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
                     tempPose3d[4 * j + 3] = 0; // "Confidence" = 0
                 }
             }//For all 25 body keypoints
+			
+			try{
+				//Left Hand
+				for (j = 0; j < 21; j++) //for all 21 pose keypoints
+				{
+					//Get the x and y coordinates of each keypoint
+					x = f2i(jsn["people"][i]["hand_left_keypoints_2d"][3 * j]);
+					y = f2i(jsn["people"][i]["hand_left_keypoints_2d"][3 * j + 1]);
+					confidence = jsn["people"][i]["hand_left_keypoints_2d"][3 * j + 2];
+
+					if (x > 0 && y > 0 && x < colorWidth && y < colorHeight) // if keypoint exists and within possible ranges
+					{
+						//Set the x, y, and depth
+						tempVertex = depth[y * colorWidth + x];
+						tempLeftHand3d[4 * j] = tempVertex.x;
+						tempLeftHand3d[4 * j + 1] = tempVertex.y;
+						tempLeftHand3d[4 * j + 2] = tempVertex.z;
+						tempLeftHand3d[4 * j + 3] = confidence;
+					}
+					else //If there was no keypoint
+					{
+						//Set the values to 0
+						tempLeftHand3d[4 * j] = 0;
+						tempLeftHand3d[4 * j + 1] = 0;
+						tempLeftHand3d[4 * j + 2] = 0;
+						tempLeftHand3d[4 * j + 3] = 0; // "Confidence" = 0
+					}
+				}//For left hand 21 keypoints
+
+				//Right Hand
+				for (j = 0; j < 21; j++) //for all 21 pose keypoints
+				{
+					//Get the x and y coordinates of each keypoint
+					x = f2i(jsn["people"][i]["hand_right_keypoints_2d"][3 * j]);
+					y = f2i(jsn["people"][i]["hand_right_keypoints_2d"][3 * j + 1]);
+					confidence = jsn["people"][i]["hand_right_keypoints_2d"][3 * j + 2];
+
+					if (x > 0 && y > 0 && x < colorWidth && y < colorHeight) // if keypoint exists and within possible ranges
+					{
+						//Set the x, y, and depth
+						tempVertex = depth[y * colorWidth + x];
+						tempRightHand3d[4 * j] = tempVertex.x;
+						tempRightHand3d[4 * j + 1] = tempVertex.y;
+						tempRightHand3d[4 * j + 2] = tempVertex.z;
+						tempRightHand3d[4 * j + 3] = confidence;
+					}
+					else //If there was no keypoint
+					{
+						//Set the values to 0
+						tempRightHand3d[4 * j] = 0;
+						tempRightHand3d[4 * j + 1] = 0;
+						tempRightHand3d[4 * j + 2] = 0;
+						tempRightHand3d[4 * j + 3] = 0; // "Confidence" = 0
+					}
+				}//For right hand 21 keypoints
+			}
+			catch(...)
+			{
+				insertHand = false;
+			}
+
 
             try //Sometimes there are no face keypoints
             {
@@ -366,7 +437,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
                     y = f2i(jsn["people"][i]["face_keypoints_2d"][3 * j + 1]);
                     confidence = jsn["people"][i]["face_keypoints_2d"][3 * j + 2];
 
-                    if (x > 0 && y > 0 && x < 1920 && y < 1080) // if keypoint exists
+                    if (x > 0 && y > 0 && x < colorWidth && y < colorHeight) // if keypoint exists
                     {
                         //Set the x, y, and depth
                         tempVertex = depth[y * colorWidth + x];
@@ -383,7 +454,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
                         tempFace3d[4 * j + 2] = 0;
                         tempFace3d[4 * j + 3] = 0; // "Confidence" = 0
                     }
-                }//For all 96 Face keypoints
+                }//For all 69 Face keypoints
             }
             catch(...)
             {
@@ -396,6 +467,11 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
             {
                 jsn["people"][i]["face_keypoints_3d"] = tempFace3d;
             }    
+			if (insertHand)
+			{
+				jsn["people"][i]["hand_left_keypoints_3d"] = tempLeftHand3d;
+				jsn["people"][i]["hand_right_keypoints_3d"] = tempRightHand3d;
+			}
         }//For all people
 
         //Save the updated file
