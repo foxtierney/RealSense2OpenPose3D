@@ -251,8 +251,8 @@ void getBaselineFrameAndCameraValues()
     rs2::pipeline pipe; // Create a pipeline
 
     rs2::config cfg; //set up the configuration of the camera
-    cfg.enable_stream(RS2_STREAM_DEPTH, 1280, 720, RS2_FORMAT_Z16, 30); //Full resolution and max FPS to speed up process
-    cfg.enable_stream(RS2_STREAM_COLOR, 1280, 720, RS2_FORMAT_BGR8, 30); //Note that the color stream is ENABLED, matched FPS with depth
+    cfg.enable_stream(RS2_STREAM_DEPTH, depthWidth, depthHeight, RS2_FORMAT_Z16, 30); //Full resolution and max FPS to speed up process
+    cfg.enable_stream(RS2_STREAM_COLOR, colorWidth, colorHeight, RS2_FORMAT_BGR8, 30); //Note that the color stream is ENABLED, matched FPS with depth
 
     pipe.start(cfg);
 
