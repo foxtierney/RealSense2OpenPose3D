@@ -28,6 +28,8 @@ Program Outline:
         e. Remember that this file was already updated so ignore it next time
 */
 
+#define _CRT_SECURE_NO_WARNINGS //Allows the use of std::strtok()
+
 #include <iostream>
 #include <math.h> //for fmod()
 
@@ -336,7 +338,7 @@ void updateKeypoints(const rs2::vertex* depth, int& frameNumber)
         double tempPose3d[25 * 4], tempFace3d[69 * 4], tempLeftHand3d[21 * 4], tempRightHand3d[21 * 4]; //3D pose and face arrays to hold temp values to insert into each file
         rs2::vertex tempVertex;
         bool insertFace = true; //Assume that there are face keypoints
-		bool insertHand = true; //...and hand keypoints
+        bool insertHand = true; //...and hand keypoints
 
         for (i = 0; i < jsn["people"].size(); i++) //For all people
         {
