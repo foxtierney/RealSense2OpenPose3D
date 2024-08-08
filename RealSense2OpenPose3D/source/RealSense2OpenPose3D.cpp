@@ -38,6 +38,8 @@ Program Outline:
 #include <librealsense2/rsutil.h> //For pixel to point deprojection
 #include <librealsense2/hpp/rs_internal.hpp>
 
+#include <chrono>
+
 
 #include "./json.hpp" //Send some thanks this way -> https://github.com/nlohmann/json
 using json = nlohmann::json;
@@ -157,11 +159,6 @@ int main(int argc, char* argv[])
         {
             fsAligned = align.process(fsAligned); //Align the depth to the color frame
             rs2::depth_frame depthAligned = fsAligned.get_depth_frame(); //Get the aligned depth frame
-
-            //Generate a point cloud and a vertex array from that to hand to "updateKeypoints()" so that it can find the world coordinates
-            //rs2::pointcloud ptCld = rs2::pointcloud();
-            //rs2::points depthPoints = ptCld.calculate(depthAligned);
-            //depthVertices = depthPoints.get_vertices();
 
             updateKeypoints(&depthAligned, frameNumber); //Add the depth information to any new files generated
         }
@@ -339,7 +336,7 @@ void updateKeypoints(const rs2::depth_frame* depthFrame, int& frameNumber)
         double confidence; //Temp confidence value
         float tempPoint[3] = {0, 0, 0 }; //Temp 3D point to be inserted into keyframe
         double tempPose3d[25 * 4], tempFace3d[69 * 4], tempLeftHand3d[21 * 4], tempRightHand3d[21 * 4]; //3D pose and face arrays to hold temp values to insert into each file
-        rs2::vertex tempVertex;
+
         bool insertFace = true; //Assume that there are face keypoints
         bool insertHand = true; //...and hand keypoints
 
@@ -356,7 +353,6 @@ void updateKeypoints(const rs2::depth_frame* depthFrame, int& frameNumber)
                 if (keypointPixel[0] > 0 && keypointPixel[1] > 0 && keypointPixel[0] < colorWidth && keypointPixel[1] < colorHeight) // if keypoint exists and within possible ranges
                 {
                     //Set the x, y, and depth
-                    //tempVertex = depth[y * colorWidth + x];
                     keypointDepth = depthFrame->get_distance(keypointPixel[0], keypointPixel[1]);
                     rs2_deproject_pixel_to_point(tempPoint, & colorIntrinsics, keypointPixel, keypointDepth);
                     tempPose3d[4 * j] = tempPoint[0];

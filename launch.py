@@ -18,7 +18,7 @@ import keyboard #For keypress to stop program
 openPosePath = "C:\\Program Files\\OpenPose\\openpose"
 openPoseEXE = ".\\build\\x64\\Release\\OpenPoseDemo.exe"
 openPoseOutputPath = "C:\\Users\\user\\Desktop\\AndroidControl\\sensor\\faceDetection\\openPoseOutput"
-openPoseArgs = ["start", "/WAIT", openPoseEXE, "-camera", "1", "-camera_resolution", "1920x1080", "-write_json", openPoseOutputPath, "-output_resolution", "1280x720", "-fps_max", "12"] #Add , "-net_resolution", "320x176", "-face_net_resolution", "320x320" to the end of this list if more speed is needed for fewer people
+openPoseArgs = ["start", "/WAIT", openPoseEXE, "-camera", "1", "-camera_resolution", "1920x1080", "-write_json", openPoseOutputPath, "-output_resolution", "1280x720"] #Add: "-net_resolution", "320x176", "-face_net_resolution", "320x320" to the end of this list if more speed is needed for fewer people. If crashing, add "-fps_max", "12"
 RealSense2OpenPoseEXE = "C:\\Users\\user\\Desktop\\AndroidControl\\sensor\\faceDetection\\RealSense2OpenPose3D\\Release\\RealSense2OpenPose3D.exe"
 PointViewer = "C:\\Users\\user\\Desktop\\AndroidControl\\sensor\\faceDetection\\PointViewer.py"
 #Output
