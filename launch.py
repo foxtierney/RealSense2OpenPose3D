@@ -17,10 +17,10 @@ import keyboard #For keypress to stop program
 #Paths
 openPosePath = "C:\\Program Files\\OpenPose\\openpose"
 openPoseEXE = ".\\build\\x64\\Release\\OpenPoseDemo.exe"
-openPoseOutputPath = "C:\\Users\\user\\Desktop\\AndroidControl\\sensor\\faceDetection\\openPoseOutput"
+openPoseOutputPath = "C:\\path\\to\\openPoseOutput"
 openPoseArgs = ["start", "/WAIT", openPoseEXE, "-camera", "1", "-camera_resolution", "1920x1080", "-write_json", openPoseOutputPath, "-output_resolution", "1280x720"] #Add: "-net_resolution", "320x176", "-face_net_resolution", "320x320" to the end of this list if more speed is needed for fewer people. If crashing, add "-fps_max", "12"
-RealSense2OpenPoseEXE = "C:\\Users\\user\\Desktop\\AndroidControl\\sensor\\faceDetection\\RealSense2OpenPose3D\\Release\\RealSense2OpenPose3D.exe"
-PointViewer = "C:\\Users\\user\\Desktop\\AndroidControl\\sensor\\faceDetection\\PointViewer.py"
+RealSense2OpenPoseEXE = "C:\\path\\to\\RealSense2OpenPose3D\\Release\\64bit\\RS2OP3D.exe"
+PointViewer = "C:\\path\\to\\PointViewer.py"
 #Output
 clearOutput = 'Y'
 numHeldFrames = 0 #How many frames are held onto during operation? -1 = all, 0 = 10 but will auto delete at the end, >= 1 = 6+ and will prompt deletion at end
@@ -41,13 +41,15 @@ def parseCmd(cmds):
 	global viewerExtra
 	global colorResoultion
 	global openPoseArgs
+	global openPoseOutputPath
+	global RealSense2OpenPoseEXE
 	
-	expected = "Expected: \"...\\launch.py \n\t[frames=<Number of Frames>]\n\t[view=<true/false>]\n\t[quit=<key name>]\n\t[d=<depth limit in meters>]\n\t[lr=<left limit in meters>,<right limit in meters>]\n\t[ud=<up above limit in meters>,<down below limit in meters>]\n\t[color-res=<width>x<height>]\n\t[face=<true/false>]\n\t[hand=<true/false>]\""
+	expected = "Expected: \"...\\launch.py \n\t[frames=<Number of Frames>]\n\t[view=<true/false>]\n\t[quit=<key name>]\n\t[d=<depth limit in meters>]\n\t[lr=<left limit in meters>,<right limit in meters>]\n\t[ud=<up above limit in meters>,<down below limit in meters>]\n\t[color-res=<width>x<height>]\n\t[face=<true/false>]\n\t[hand=<true/false>]\n\t[output=<path\\to\\openPose\\outputFiles>\n\t[r2oexe=<path\\to\\RS2OP3D.exe>]\""
 	
 	lenCmds = len(cmds)
 	
 	if(lenCmds > 1): #There was an argument passed
-		if(lenCmds > 10): #Too many arguments
+		if(lenCmds > 12): #Too many arguments
 			print("Too many arguments.")
 			print(expected)
 			exit()
@@ -77,10 +79,16 @@ def parseCmd(cmds):
 					elif(field == "hand"): #Generate hand keypoints
 						if(value.lower() in ["true", "t", "yes", "y", "1"]): #If "True"
 							openPoseArgs.append("--hand")
+					elif(field == "output"):
+						openPoseOutputPath = value
+						openPoseArgs[8] = openPoseOutputPath
+					elif(field == "r2oexe"):
+						RealSense2OpenPoseEXE = value
 					else:
 						Print("\"" + field + "\" is not a valid argument name")
 				except:
 					print("There was an error while parsing the command.")
+					print(f"This is the last field and value that was read: {field}={value}")
 					print(expected)
 					exit()
 	
